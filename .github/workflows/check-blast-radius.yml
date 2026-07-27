@@ -1,0 +1,19 @@
+name: check-blast-radius
+on: push
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fail if command exceeds safe removal threshold
+        run: |
+          python3 -c "
+          import re
+          text = open('ci/maintenance-command.md').read()
+          remove = int(re.search(r'Servers to remove: (\d+)', text).group(1))
+          total = int(re.search(r'Total servers in subsystem: (\d+)', text).group(1))
+          pct = remove / total * 100
+          if pct > 10:
+              print(f'Command would remove {pct:.1f}% of subsystem — exceeds 10% safety limit!')
+              exit(1)
+          "
